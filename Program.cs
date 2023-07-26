@@ -216,3 +216,119 @@ class Program
         Console.WriteLine();
     }
 }
+/*
+using System;
+using System.Diagnostics.Tracing;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+class Program
+{
+    static void Main()
+    {
+        var start = new short[] { 123, 1, 3, 2, 612, 2 };
+        decimal encoded = encode(start);
+        short[] decoded = decode(encoded);
+
+        Console.WriteLine("encoded: " + encoded);
+        for(int i =  0; i < decoded.Length; i++)
+        {
+            Console.WriteLine($"{start[i]} -> {decoded[i]}");
+        }
+    }
+
+    private static short[] decode(decimal given)
+    {
+        short[] decoded = new short[6];
+        int[] bits = decimal.GetBits(given);
+        for(int i = 0; i < 3; i++)
+        {
+            int firstIdx = i;
+            int secondIdx = i + 3;
+            short firstValue = (short)(((int)bits[i]) >> 16);
+            short secondValue = (short)(((int)bits[i]) & 0xFFFF);
+            decoded[firstIdx] = firstValue;
+            decoded[secondIdx] = secondValue;
+        }
+
+        return decoded;
+    }
+
+    public static void printDecimalBits(decimal myDecimal)
+    {
+        int[] bits = decimal.GetBits(myDecimal);
+
+        Console.Write(myDecimal.ToString() + ": ");
+
+        // Output individual components in binary format
+        for (int i = 0; i < bits.Length; i++)
+        {
+            Console.Write(Convert.ToString(bits[i], 2).PadLeft(32, '0'));
+            Console.Write(" ");
+        }
+        Console.WriteLine();
+    }
+    public static void printIntBits(int number)
+    {
+        int totalBits = sizeof(int) * 8;
+
+        // Loop through each bit and print it
+        for (int i = totalBits - 1; i >= 0; i--)
+        {
+            int bitValue = (number >> i) & 1;
+            Console.Write(bitValue);
+        }
+
+        Console.WriteLine();
+    } 
+    public static void printShortBits(int number)
+    {
+        int totalBits = sizeof(short) * 8;
+
+        // Loop through each bit and print it
+        for (int i = totalBits - 1; i >= 0; i--)
+        {
+            int bitValue = (number >> i) & 1;
+            Console.Write(bitValue);
+        }
+
+        Console.WriteLine();
+    }
+    public static decimal encode(short[] arr)
+    {
+        if(arr.Length != 6)
+        {
+            return -1;
+        }
+        int[] ints = new int[3];
+        for (int i = 0; i < 3; i++)
+        {
+            int firstIdx = i;
+            int secondIdx = i + 3; 
+            ints[i] = (arr[firstIdx] << 16) | ((int)arr[secondIdx]);
+
+            Console.WriteLine(firstIdx);
+            printIntBits(arr[firstIdx]);
+            printShortBits(arr[firstIdx]);
+            Console.WriteLine(secondIdx);
+            printIntBits(arr[secondIdx]);
+            printShortBits(arr[secondIdx]);
+            Console.WriteLine("------");
+            printIntBits(ints[i]);
+            Console.WriteLine("------");
+        }
+
+        // Combine the components to create the decimal
+        int[] bits = new int[4];
+        ints.CopyTo(bits, 0);
+        decimal result = new decimal(bits);
+        int[] gottenBits = decimal.GetBits(result);
+
+        for(int i = 0; i < gottenBits.Length; i++)
+        {
+            Console.WriteLine($"{bits[i]} -> {gottenBits[i]}");
+        }
+
+        return result;
+    }
+}
+*/
