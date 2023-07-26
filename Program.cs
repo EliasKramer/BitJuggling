@@ -20,20 +20,22 @@ class ByteJuggler
     public static void printDecimal(decimal given)
     {
         int[] bits = decimal.GetBits(given);
-
+        
         // Each decimal number is represented using four 32-bit integers (96 bits in total).
         // We only need the first 3 integers to get the binary representation.
-        int lastInt = bits[bits.Length - 1];
-        int midInt = bits[bits.Length - 2];
-        int firstInt = bits[bits.Length - 3];
+        int b1 = bits[0];
+        int b2 = bits[1];
+        int b3 = bits[2];
+        int b4 = bits[3];
 
         // Convert the 3 integers to binary strings
-        string lastBits = Convert.ToString(lastInt, 2).PadLeft(32, '0');
-        string midBits = Convert.ToString(midInt, 2).PadLeft(32, '0');
-        string firstBits = Convert.ToString(firstInt, 2).PadLeft(32, '0');
+        string s1 = Convert.ToString(b1, 2).PadLeft(32, '0');
+        string s2 = Convert.ToString(b2, 2).PadLeft(32, '0');
+        string s3 = Convert.ToString(b3, 2).PadLeft(32, '0');
+        string s4 = Convert.ToString(b4, 2).PadLeft(32, '0');
 
         // Combine the binary strings to get the final binary representation
-        string binaryString = $"{firstBits} {midBits} {lastBits}";
+        string binaryString = $"{s1} {s2} {s3} {s4}";
 
         Console.WriteLine(binaryString);
     }
@@ -69,11 +71,48 @@ class CustomConverter
     }
     public static decimal shortToDecimal(List<short> given)
     {
-        return 1;
+        if (given.Count != 6)
+        {
+            throw new Exception("Input list must contain exactly 6 shorts.");
+        }
+
+        // Concatenate the 6 shorts into a 96-bit binary representation
+        long combinedValue = 0;
+        for (int i = 0; i < 6; i++)
+        {
+            combinedValue = (combinedValue << 16) | (ushort)given[i];
+        }
+
+        // Convert the 96-bit binary representation to a decimal value
+        decimal result = new decimal(new int[] { (int)combinedValue, (int)(combinedValue >> 32), 0, 0 });
+
+        return result;
     }
     public static List<short> decimalToShort(decimal given)
     {
-        return new List<short>();
+        // Get the underlying 96-bit binary representation of the decimal value
+        int[] bits = decimal.GetBits(given);
+
+        // Check if the decimal has exactly 96 bits (4 elements in the bits array)
+        if (bits.Length != 4)
+        {
+            throw new Exception("Input decimal must have exactly 96 bits.");
+        }
+
+        // Convert the 96-bit binary representation into 6 shorts
+        List<short> result = new List<short>();
+        for (int i = 0; i < 4; i++)
+        {
+            // Get the lower 16 bits from each 32-bit element
+            short lowerShort = (short)(bits[i] & 0xFFFF);
+            result.Add(lowerShort);
+
+            // Shift right by 16 bits to get the next 16 bits from the same 32-bit element
+            short upperShort = (short)((bits[i] >> 16) & 0xFFFF);
+            result.Add(upperShort);
+        }
+
+        return result;
     }
     public static List<float> shortToFloat(List<short> given)
     {
@@ -93,13 +132,47 @@ class Magician
 }
 class Program
 {
+    public static decimal SetBit(decimal input, int position, bool value)
+    {
+        if (position < 0 || position > 127)
+        {
+            throw new ArgumentOutOfRangeException(nameof(position), "Position must be between 0 and 127.");
+        }
+
+        int[] bits = Decimal.GetBits(input);
+
+        int intIndex = position / 32;
+        int bitIndex = position % 32;
+
+        if (value)
+        {
+            // Set the bit to 1
+            bits[intIndex] |= (1 << bitIndex);
+        }
+        else
+        {
+            // Set the bit to 0
+            bits[intIndex] &= ~(1 << bitIndex);
+        }
+
+        return new decimal(bits);
+    }
     static void Main()
     {
-       test32To16bitFloats();
+        test32To16bitFloats();
+    }
+    static void testDecimalBitSetting()
+    {
+        for (int i = 0; i < 96; i++)
+        {
+            decimal x = SetBit(i, 0, true);
+            Console.WriteLine(x);
+            ByteJuggler.printDecimal(x);
+        }
     }
     static void test32To16bitFloats()
     {
-        List<float> start = new List<float>() { 15, -20, 10, 20, 32.2f, 1.0f, 8.0f, 13.2f };
+        List<float> start = new List<float>() {-20, 10, 32.2f, 1.0f, 8.0f, 13.2f };
         List<short> encoded = CustomConverter.floatToShort(start);
         List<float> decoded = CustomConverter.shortToFloat(encoded);
 
@@ -117,7 +190,7 @@ class Program
     }
     static void testCompleteEncoding()
     {
-        List<float> start = new List<float>() { 15, -20, 10, 20, 32.2f, 1.0f, 8.0f, 13.2f };
+        List<float> start = new List<float>() { -20, 10, 32.2f, 1.0f, 8.0f, 13.2f };
 
         decimal encoded = Magician.floatsToDecimal(start);
         List<float> decoded = Magician.decimalToFloats(encoded);
@@ -136,7 +209,7 @@ class Program
 
     static void printCollection<T>(List<T> collection)
     {
-        for(int i = 0; i < collection.Count; i++)
+        for (int i = 0; i < collection.Count; i++)
         {
             Console.Write(collection.ElementAt(i) + ", ");
         }
